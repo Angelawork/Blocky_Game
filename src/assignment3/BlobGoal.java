@@ -32,17 +32,14 @@ public class BlobGoal extends Goal{
 		+ " blocks, anywhere within the block";
 	}
 
-	//should this method be recursive?:
-	//the method returns the number of unit cells of the target color that
-	//are orthogonally connect to the the unit cell in position (i, j) and have not been visited yet
 	public int undiscoveredBlobSize(int i, int j, Color[][] unitCells, boolean[][] visited) {
 		int count=0;
-		if(unitCells[i][j]!=targetGoal || visited[i][j]){//compare by == or .equals?
+		if(unitCells[i][j]!=targetGoal || visited[i][j]){//delete visit
 			return 0;
-		}else if(unitCells[i][j]==targetGoal){//otherwise this cell will end up being double counted (or worse).
+		}else if(unitCells[i][j]==targetGoal){
 			if(!visited[i][j]){count++; visited[i][j]=true;}
 
-			if(i+1 < unitCells.length) {
+			if(i+1 < unitCells.length ) {
 				count += undiscoveredBlobSize(i + 1, j, unitCells, visited);
 			}if (i-1>=0) {
 				count += undiscoveredBlobSize(i -1, j, unitCells, visited);

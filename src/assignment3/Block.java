@@ -14,7 +14,7 @@ public class Block {
 
     private Block[] children; // {UR, UL, LL, LR}
 
-    public static Random gen = new Random(123);
+    public static Random gen = new Random(4);
 
 
     /*
@@ -33,19 +33,33 @@ public class Block {
         this.children = subBlocks;
     }
 
-    //page 14: It would be possible to generate that same board even if maximum depth were 5. In
-    //that case, the unit cells would be one size smaller, even though no Block has been divided to that
-    //level?
     public static void main(String[] agrs) {
-        /*
+
         Block blockDepth3 = new Block(0,3);
         blockDepth3.updateSizeAndPosition(16, 0, 0);
-        blockDepth3.printColoredBlock();
         System.out.println("------------------------");
-        blockDepth3.reflect(0);
-        blockDepth3.printColoredBlock();
+        Block b1 = blockDepth3.getSelectedBlock(2, 15, 1);
+        b1.printBlock();
+        b1 = blockDepth3.getSelectedBlock(2, 15, 2);
+        b1.printBlock();
+        b1 = blockDepth3.getSelectedBlock(2, 15, 3);
+        b1.printBlock();
+        b1 = blockDepth3.getSelectedBlock(3, 5, 2);
+        b1.printBlock();
+        b1=blockDepth3.getSelectedBlock(24, 25, 2);
+        System.out.println(b1);
+        //b1=blockDepth3.getSelectedBlock(1, 1, -1);
         System.out.println("------------------------");
-         */
+        Block test=new Block(0,3);
+        test.updateSizeAndPosition(16,0,0);
+        test.printBlock();
+        Block b2 = test.getSelectedBlock(64, 58, 2);
+        System.out.println(b2);
+        Block b3 = test.getSelectedBlock(10, 2, 2);
+        b3.printBlock();
+
+
+
     }
 
     /*
@@ -55,12 +69,14 @@ public class Block {
      * (i.e. they will all be initialized by default)
      */
     public Block(int lvl, int maxDepth) {
+        if(lvl>maxDepth)throw new IllegalArgumentException("lvl deeper than maxDepth!");//is this necessary ED#1112?
+
         double randNum;
         this.level = lvl;
         this.maxDepth = maxDepth;
 
-        if (lvl + 1 <= maxDepth) { //not yet at its maximum depth?
-            randNum = gen.nextDouble(); //generate a random number in the interval [0, 1), should 1 be put there or not?(default=1?)
+        if (lvl + 1 <= maxDepth) { //lvl < maxdepth
+            randNum = gen.nextDouble();
             if (randNum < Math.exp(-0.25 * lvl)) {
                 this.color = null;
                 this.children = new Block[]{new Block(lvl + 1, maxDepth),
@@ -87,7 +103,7 @@ public class Block {
      *  coordinates of the top left corner of the block.
      */
     public void updateSizeAndPosition(int size, int xCoord, int yCoord) {
-        if (!(size > 0)) throw new IllegalArgumentException("Negative size is invalid");//negative, is 0 invalid also?
+        if (size <= 0) {throw new IllegalArgumentException("Negative size is invalid");}
 
         this.size = size;
         this.xCoord = xCoord;
@@ -96,7 +112,6 @@ public class Block {
         if (this.color != null) {
             return;
         } else {
-            //or it cannot be evenly divided into 2 integers until the max depth is reached? should size%2 check here or outside if?
             if (size % 2 != 0) throw new IllegalArgumentException("Size isn't divisible by 2!");
             this.children[0].updateSizeAndPosition(size / 2, xCoord + size / 2, yCoord);
             this.children[1].updateSizeAndPosition(size / 2, xCoord, yCoord);
@@ -117,7 +132,7 @@ public class Block {
      *
      * The order in which the blocks to draw appear in the list does NOT matter.
      */
-    public ArrayList<BlockToDraw> getBlocksToDraw() {//can we use add and addAll method?
+    public ArrayList<BlockToDraw> getBlocksToDraw() {
         ArrayList<BlockToDraw> output = new ArrayList<BlockToDraw>();
         if (this.color != null) {
             output.add(new BlockToDraw(this.color, this.xCoord, this.yCoord, this.size, 0));
@@ -154,15 +169,29 @@ public class Block {
      * - this.level <= lvl <= maxDepth (if not throw exception)
      * - if (x,y) is not within this Block, return null.
      */
-    public Block getSelectedBlock(int x, int y, int lvl) {//how to calculate if it runs in O(h)?
+    public Block getSelectedBlock(int x, int y, int lvl) {
         if (lvl < this.level || lvl > this.maxDepth) throw new IllegalArgumentException("Out of range level input!");
-        //is this the same as this.level <= lvl <= maxDepth?
 
-        if (this.color == null && lvl > this.level) {
+        //if has children & not on this level
+        if (this.inrange(x,y) && this.color == null && lvl > this.level) {//we don't use lvl>=this.level because sometimes we search in its children sometime we dont need to?
+            int child=this.findIndex(x,y);
+            Block output = this.children[child].getSelectedBlock(x, y, lvl);
+            return output;
+        }//if its indeed on this level
+        else if (this.inrange(x,y) && lvl >= this.level) {
+            return this;
+        }
+        return null;
+    }
+    /*
+    public Block getSelectedBlock(int x, int y, int lvl) {
+        if (lvl < this.level || lvl > this.maxDepth) throw new IllegalArgumentException("Out of range level input!");
+
+        if (this.inrange(x,y) && this.color == null && lvl > this.level) {
             Block output=null;
             int max=0;
 
-            for (Block i : this.children) {
+            for (Block i : this.children) {//helper function
                 Block result = i.getSelectedBlock(x, y, lvl);
                 if (result!=null && result.level>max){//the block at the location with the closest level value?
                     max= result.getLevel();
@@ -175,6 +204,7 @@ public class Block {
         }
         return null;
     }
+     */
 
     //helper method for coords
     private boolean inrange(int x,int y){//is this how we detect the major block user selected is within?
@@ -184,6 +214,22 @@ public class Block {
         int yMax=this.yCoord+this.size;
         int yMin=this.yCoord;
         return(x>=xMin && x<=xMax && y>=yMin && y<=yMax);
+    }
+
+    private int findIndex(int x,int y){
+        int xMiddle=this.xCoord+this.size/2;
+        int yMiddle=this.yCoord+this.size/2;
+
+        if(x<xMiddle && y<yMiddle){
+            return 1;
+        }else if(x<xMiddle && y>=yMiddle){
+            return 2;
+        }else if(x>=xMiddle && y<yMiddle){
+            return 0;
+        }else if(x>=xMiddle && y>=yMiddle){
+            return 3;
+        }
+        return 0;
     }
 
     /*
@@ -198,7 +244,7 @@ public class Block {
         if (direction != 0 && direction != 1) throw new IllegalArgumentException("input is neither a 0 nor a 1!");
 
         if (direction == 0) {//swap horizontally
-            if (this.color == null) {//how to swap position in the array?
+            if (this.color == null) {
                 this.children[0].Swap(this.children[3]);
                 Substitute(this,0,3);
                 this.children[1].Swap(this.children[2]);

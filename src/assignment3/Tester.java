@@ -81,6 +81,15 @@ class Part1Test {   // =======  12 points =======
         assertEquals(expectedColorUL, actualColorUL);  // checking if the colors at level 2 are correct for the upper left child
     }
 
+
+    // Testing for the case were lvl > maxDepth, as per the TA's answer on Ed
+    // https://edstem.org/us/courses/32649/discussion/2880926
+    @Test
+    @DisplayName("Block constructor test3")
+    void BlockConstructorTest3() {
+        assertThrows(IllegalArgumentException.class, () -> new Block(3, 1));
+    }
+
     @Test
     @Tag("score:3")
     @DisplayName("Block updateSizeAndPosition() test1")
@@ -141,6 +150,7 @@ class Part1Test {   // =======  12 points =======
     void GetBlocksToDrawTest1() {
         Block.gen = new Random(4);
         Block b = new Block(0, 2);
+        b.updateSizeAndPosition(16, 0, 0);
 
         ArrayList<BlockToDraw> blocksToDraw = b.getBlocksToDraw();
 
@@ -166,7 +176,7 @@ class Part1Test {   // =======  12 points =======
     @DisplayName("Block getBlocksToDraw() test2")
     void GetBlocksToDrawTest2() {
         Block[] children = new Block[0];
-        Block b = new Block(0, 0, 0, 0, 2, GameColors.YELLOW, children);
+        Block b = new Block(0, 0, 16, 0, 2, GameColors.YELLOW, children);
 
         ArrayList<BlockToDraw> blocksToDraw = b.getBlocksToDraw();
         assertEquals(2, blocksToDraw.size());
@@ -186,8 +196,8 @@ class Part2Test {  // ========= 12 points =========
     void getSelectedBlock1() {
         Block b = new Block(0, 0, 0, 0, 2, null, new Block[0]);
 
-        assertThrows(IllegalArgumentException.class, () -> b.getSelectedBlock(2,15,4));
-        assertThrows(IllegalArgumentException.class, () -> b.getSelectedBlock(15,2,-1));
+        assertThrows(IllegalArgumentException.class, () -> b.getSelectedBlock(2, 15, 4));
+        assertThrows(IllegalArgumentException.class, () -> b.getSelectedBlock(15, 2, -1));
     }
 
     @Test
@@ -223,9 +233,9 @@ class Part2Test {  // ========= 12 points =========
     void getSelectedBlock3() throws NoSuchFieldException, IllegalAccessException {
         Block.gen = new Random(4);
         Block b = new Block(0, 3);
-        b.updateSizeAndPosition(16,0,0);
+        b.updateSizeAndPosition(16, 0, 0);
 
-        Block res = b.getSelectedBlock(9,10, 2);
+        Block res = b.getSelectedBlock(9, 10, 2);
 
         Field xCoordField = Block.class.getDeclaredField("xCoord");
         Field yCoordField = Block.class.getDeclaredField("yCoord");
@@ -253,13 +263,40 @@ class Part2Test {  // ========= 12 points =========
     }
 
     @Test
+    @Tag("score:2")
+    @DisplayName("Block getSelectedBlock() test4")
+    void getSelectedBlock4() throws NoSuchFieldException, IllegalAccessException {
+        Block.gen = new Random(4);
+        Block b = new Block(0, 3);
+        b.updateSizeAndPosition(16, 0, 0);
+        b.printColoredBlock();
+
+        Block res = b.getSelectedBlock(9, 1, 2);
+
+        Field xCoordField = Block.class.getDeclaredField("xCoord");
+        Field yCoordField = Block.class.getDeclaredField("yCoord");
+        Field colorField = Block.class.getDeclaredField("color");
+        Field childrenField = Block.class.getDeclaredField("children");
+
+        xCoordField.setAccessible(true);
+        yCoordField.setAccessible(true);
+        colorField.setAccessible(true);
+        childrenField.setAccessible(true);
+
+        assertEquals(8, (int) xCoordField.get(res));
+        assertEquals(0, (int) yCoordField.get(res));
+        assertEquals(GameColors.YELLOW, colorField.get(res));
+        assertEquals(0, ((Block[]) childrenField.get(res)).length);
+    }
+
+    @Test
     @Tag("score:1")
     @DisplayName("Block reflect() test1")
     void reflect1() {
         Block b = new Block(0, 0, 0, 0, 2, null, new Block[0]);
 
-        assertThrows(IllegalArgumentException.class, () ->  b.reflect(2));
-        assertThrows(IllegalArgumentException.class, () ->  b.reflect(-1));
+        assertThrows(IllegalArgumentException.class, () -> b.reflect(2));
+        assertThrows(IllegalArgumentException.class, () -> b.reflect(-1));
     }
 
     @Test
@@ -298,8 +335,8 @@ class Part2Test {  // ========= 12 points =========
     @DisplayName("Block rotate() test1")
     void rotate1() {
         Block b = new Block();
-        assertThrows(IllegalArgumentException.class, () ->  b.rotate(2));
-        assertThrows(IllegalArgumentException.class, () ->  b.rotate(-1));
+        assertThrows(IllegalArgumentException.class, () -> b.rotate(2));
+        assertThrows(IllegalArgumentException.class, () -> b.rotate(-1));
     }
 
     @Test
@@ -325,7 +362,7 @@ class Part2Test {  // ========= 12 points =========
 
         List<Color> expected = List.of(GameColors.BLUE, GameColors.RED, GameColors.BLUE, GameColors.GREEN);
 
-        List <Color> actual = new ArrayList<>();
+        List<Color> actual = new ArrayList<>();
         for (Block child : childrenLevel1) {
             actual.add((Color) colorField.get(child));
         }
@@ -359,7 +396,7 @@ class Part2Test {  // ========= 12 points =========
     void smash2() throws NoSuchFieldException, IllegalAccessException {
         Block.gen = new Random(0);
         Block b = new Block(1, 2);
-        b.updateSizeAndPosition(4, 0,0);
+        b.updateSizeAndPosition(4, 0, 0);
 
         b.smash();
 
@@ -379,6 +416,27 @@ class Part2Test {  // ========= 12 points =========
 
         assertEquals(expected, actual);
     }
+
+    // smash root level
+    @Test
+    @DisplayName("Block smash() test3")
+    void smash3() {
+        Block.gen = new Random(0);
+        Block b = new Block(0, 4);
+        b.updateSizeAndPosition(16, 0, 0);
+        assertFalse(b.smash());
+    }
+
+    // smash leaf
+    @Test
+    @DisplayName("Block smash() test4")
+    void smash4() {
+        Block.gen = new Random(0);
+        Block b = new Block(4, 4);
+        b.updateSizeAndPosition(16, 0, 0);
+        assertFalse(b.smash());
+    }
+
 }
 
 class Part3Test {  // ======== 16 points ========
@@ -389,6 +447,8 @@ class Part3Test {  // ======== 16 points ========
     void Blockflatten1() {
         Block.gen = new Random(2);
         Block b = new Block(0, 2);
+        b.updateSizeAndPosition(16, 0, 0);
+
         Color[][] c = b.flatten();
 
         Color[][] expected = new Color[][]{
@@ -410,10 +470,10 @@ class Part3Test {  // ======== 16 points ========
     @DisplayName("Block flatten() test2")
     void Blockflatten2() {
         Block[] children = new Block[4];
-        children[0] = new Block(0, 0, 0, 1, 1, GameColors.BLUE, new Block[0]);
-        children[1] = new Block(0, 0, 0, 1, 1, GameColors.YELLOW, new Block[0]);
-        children[2] = new Block(0, 0, 0, 1, 1, GameColors.RED, new Block[0]);
-        children[3] = new Block(0, 0, 0, 1, 1, GameColors.GREEN, new Block[0]);
+        children[0] = new Block(8, 0, 8, 1, 1, GameColors.BLUE, new Block[0]);
+        children[1] = new Block(0, 0, 8, 1, 1, GameColors.YELLOW, new Block[0]);
+        children[2] = new Block(0, 8, 8, 1, 1, GameColors.RED, new Block[0]);
+        children[3] = new Block(8, 8, 8, 1, 1, GameColors.GREEN, new Block[0]);
 
         Block b = new Block(0, 0, 16, 0, 1, null, children);
 
@@ -438,15 +498,15 @@ class Part3Test {  // ======== 16 points ========
         Block[] children = new Block[4];
         Block[] llChildren = new Block[4];
 
-        llChildren[0] = new Block(0, 0, 0, 2, 2, GameColors.RED, new Block[0]);
-        llChildren[1] = new Block(0, 0, 0, 2, 2, GameColors.GREEN, new Block[0]);
-        llChildren[2] = new Block(0, 0, 0, 2, 2, GameColors.GREEN, new Block[0]);
-        llChildren[3] = new Block(0, 0, 0, 2, 2, GameColors.YELLOW, new Block[0]);
+        llChildren[0] = new Block(4, 8, 4, 2, 2, GameColors.RED, new Block[0]);
+        llChildren[1] = new Block(0, 8, 4, 2, 2, GameColors.GREEN, new Block[0]);
+        llChildren[2] = new Block(0, 12, 4, 2, 2, GameColors.GREEN, new Block[0]);
+        llChildren[3] = new Block(4, 12, 4, 2, 2, GameColors.YELLOW, new Block[0]);
 
-        children[0] = new Block(0, 0, 0, 1, 2, GameColors.RED, new Block[0]);
-        children[1] = new Block(0, 0, 0, 1, 2, GameColors.BLUE, new Block[0]);
-        children[2] = new Block(0, 0, 0, 1, 2, null, llChildren);
-        children[3] = new Block(0, 0, 0, 1, 2, GameColors.YELLOW, new Block[0]);
+        children[0] = new Block(8, 0, 8, 1, 2, GameColors.RED, new Block[0]);
+        children[1] = new Block(0, 0, 8, 1, 2, GameColors.BLUE, new Block[0]);
+        children[2] = new Block(0, 8, 8, 1, 2, null, llChildren);
+        children[3] = new Block(8, 8, 8, 1, 2, GameColors.YELLOW, new Block[0]);
 
         Block b = new Block(0, 0, 16, 0, 2, null, children);
 
@@ -466,6 +526,27 @@ class Part3Test {  // ======== 16 points ========
         }
     }
 
+    // test for if flattened board is square
+    @Test
+    @DisplayName("Block flatten() test4")
+    void Blockflatten4() {
+        Block b = new Block(0, 10);
+        b.updateSizeAndPosition(1024, 0, 0);
+        Color[][] board = b.flatten();
+        assertEquals(board.length, board[0].length);
+        assertEquals(1024, board.length);
+    }
+
+    // test for if flattened board is minimized to unit-cells
+    @Test
+    @DisplayName("Block flatten() test5")
+    void Blockflatten5() {
+        Block b = new Block(0, 10);
+        b.updateSizeAndPosition(2048, 0, 0);
+        Color[][] board = b.flatten();
+        assertEquals(board.length, board[0].length);
+        assertEquals(1024, board.length);
+    }
 
     @Test
     @Tag("score:1")
@@ -473,15 +554,14 @@ class Part3Test {  // ======== 16 points ========
     void PGscore1() {
         Block[] children = new Block[4];
 
-        children[0] = new Block(0, 0, 0, 1, 2, GameColors.GREEN, new Block[0]);
-        children[1] = new Block(0, 0, 0, 1, 2, GameColors.BLUE, new Block[0]);
-        children[2] = new Block(0, 0, 0, 1, 2, GameColors.RED, new Block[0]);
-        children[3] = new Block(0, 0, 0, 1, 2, GameColors.YELLOW, new Block[0]);
+        children[0] = new Block(8, 0, 8, 1, 2, GameColors.GREEN, new Block[0]);
+        children[1] = new Block(0, 0, 8, 1, 2, GameColors.BLUE, new Block[0]);
+        children[2] = new Block(0, 8, 8, 1, 2, GameColors.RED, new Block[0]);
+        children[3] = new Block(8, 8, 8, 1, 2, GameColors.YELLOW, new Block[0]);
 
         Block b = new Block(0, 0, 16, 0, 2, null, children);
 
         PerimeterGoal p = new PerimeterGoal(GameColors.RED);
-
         assertEquals(4, p.score(b));
     }
 
@@ -491,6 +571,7 @@ class Part3Test {  // ======== 16 points ========
     void PGscore2() {
         Block.gen = new Random(8);
         Block b = new Block(0, 2);
+        b.updateSizeAndPosition(16, 0, 0);
 
         PerimeterGoal p = new PerimeterGoal(GameColors.YELLOW);
         assertEquals(3, p.score(b));
@@ -532,9 +613,9 @@ class Part3Test {  // ======== 16 points ========
     void BGBlobSize3() {
         Block.gen = new Random(8);
         Block b = new Block(0, 2);
+        b.updateSizeAndPosition(16, 0, 0);
 
         BlobGoal g = new BlobGoal(GameColors.YELLOW);
-
         assertEquals(2, g.undiscoveredBlobSize(1, 1, b.flatten(), new boolean[4][4]));
     }
 
@@ -545,15 +626,15 @@ class Part3Test {  // ======== 16 points ========
         Block[] children = new Block[4];
         Block[] urChildren = new Block[4];
 
-        urChildren[0] = new Block(0, 0, 0, 2, 2, GameColors.GREEN, new Block[0]);
-        urChildren[1] = new Block(0, 0, 0, 2, 2, GameColors.BLUE, new Block[0]);
-        urChildren[2] = new Block(0, 0, 0, 2, 2, GameColors.RED, new Block[0]);
-        urChildren[3] = new Block(0, 0, 0, 2, 2, GameColors.YELLOW, new Block[0]);
+        urChildren[0] = new Block(12, 0, 4, 2, 2, GameColors.GREEN, new Block[0]);
+        urChildren[1] = new Block(8, 0, 4, 2, 2, GameColors.BLUE, new Block[0]);
+        urChildren[2] = new Block(8, 4, 4, 2, 2, GameColors.RED, new Block[0]);
+        urChildren[3] = new Block(12, 4, 4, 2, 2, GameColors.YELLOW, new Block[0]);
 
-        children[0] = new Block(0, 0, 0, 1, 2, null, urChildren);
-        children[1] = new Block(0, 0, 0, 1, 2, GameColors.BLUE, new Block[0]);
-        children[2] = new Block(0, 0, 0, 1, 2, GameColors.RED, new Block[0]);
-        children[3] = new Block(0, 0, 0, 1, 2, GameColors.YELLOW, new Block[0]);
+        children[0] = new Block(8, 0, 8, 1, 2, null, urChildren);
+        children[1] = new Block(0, 0, 8, 1, 2, GameColors.BLUE, new Block[0]);
+        children[2] = new Block(0, 8, 8, 1, 2, GameColors.RED, new Block[0]);
+        children[3] = new Block(8, 8, 8, 1, 2, GameColors.YELLOW, new Block[0]);
 
         Block b = new Block(0, 0, 16, 0, 2, null, children);
 
@@ -567,6 +648,7 @@ class Part3Test {  // ======== 16 points ========
     void BGscore2() {
         Block.gen = new Random(500);
         Block b = new Block(0, 3);
+        b.updateSizeAndPosition(16, 0, 0);
 
         BlobGoal g = new BlobGoal(GameColors.RED);
         assertEquals(18, g.score(b));

@@ -14,7 +14,7 @@ public class PerimeterGoal extends Goal{
 		int total=0;
 
 		for(int c=0;c<myColors[0].length;c++){
-			if(myColors[0][c]==targetGoal){//do we need to use .equals to compare color?
+			if(myColors[0][c]==targetGoal){//test case for .equals?, == only compare address
 				total++;
 			}
 			if(myColors[myColors.length-1][c]==targetGoal){
