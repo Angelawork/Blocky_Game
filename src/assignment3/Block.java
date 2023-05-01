@@ -14,7 +14,7 @@ public class Block {
 
     private Block[] children; // {UR, UL, LL, LR}
 
-    public static Random gen = new Random(4);
+    public static Random gen = new Random();
 
 
     /*
@@ -33,34 +33,7 @@ public class Block {
         this.children = subBlocks;
     }
 
-    public static void main(String[] agrs) {
 
-        Block blockDepth3 = new Block(0,3);
-        blockDepth3.updateSizeAndPosition(16, 0, 0);
-        System.out.println("------------------------");
-        Block b1 = blockDepth3.getSelectedBlock(2, 15, 1);
-        b1.printBlock();
-        b1 = blockDepth3.getSelectedBlock(2, 15, 2);
-        b1.printBlock();
-        b1 = blockDepth3.getSelectedBlock(2, 15, 3);
-        b1.printBlock();
-        b1 = blockDepth3.getSelectedBlock(3, 5, 2);
-        b1.printBlock();
-        b1=blockDepth3.getSelectedBlock(24, 25, 2);
-        System.out.println(b1);
-        //b1=blockDepth3.getSelectedBlock(1, 1, -1);
-        System.out.println("------------------------");
-        Block test=new Block(0,3);
-        test.updateSizeAndPosition(16,0,0);
-        test.printBlock();
-        Block b2 = test.getSelectedBlock(64, 58, 2);
-        System.out.println(b2);
-        Block b3 = test.getSelectedBlock(10, 2, 2);
-        b3.printBlock();
-
-
-
-    }
 
     /*
      * Creates a random block given its level and a max depth.
@@ -173,7 +146,7 @@ public class Block {
         if (lvl < this.level || lvl > this.maxDepth) throw new IllegalArgumentException("Out of range level input!");
 
         //if has children & not on this level
-        if (this.inrange(x,y) && this.color == null && lvl > this.level) {//we don't use lvl>=this.level because sometimes we search in its children sometime we dont need to?
+        if (this.inrange(x,y) && this.color == null && lvl > this.level) {//we don't use lvl>=this.level because sometimes we search in its children sometime we dont need to
             int child=this.findIndex(x,y);
             Block output = this.children[child].getSelectedBlock(x, y, lvl);
             return output;
@@ -183,31 +156,9 @@ public class Block {
         }
         return null;
     }
-    /*
-    public Block getSelectedBlock(int x, int y, int lvl) {
-        if (lvl < this.level || lvl > this.maxDepth) throw new IllegalArgumentException("Out of range level input!");
-
-        if (this.inrange(x,y) && this.color == null && lvl > this.level) {
-            Block output=null;
-            int max=0;
-
-            for (Block i : this.children) {//helper function
-                Block result = i.getSelectedBlock(x, y, lvl);
-                if (result!=null && result.level>max){//the block at the location with the closest level value?
-                    max= result.getLevel();
-                    output=result;
-                }
-            }
-            return output;
-        } else if (this.inrange(x,y) && lvl >= this.level) {
-            return this;
-        }
-        return null;
-    }
-     */
 
     //helper method for coords
-    private boolean inrange(int x,int y){//is this how we detect the major block user selected is within?
+    private boolean inrange(int x,int y){//is this how we detect the major block user selected is within
         int xMax=this.xCoord+this.size;
         int xMin=this.xCoord;
 
@@ -250,7 +201,7 @@ public class Block {
                 this.children[1].Swap(this.children[2]);
                 Substitute(this,1,2);
 
-                for (Block i : this.children) {//does post/pre order matter?
+                for (Block i : this.children) {
                     i.reflect(direction);
                 }
             }
