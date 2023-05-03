@@ -3,7 +3,7 @@
 This assignment consists of implementing a visual game in which players apply operations such as rotations to a recursive structure in order to work towards a goal. The main data structure
 can be represented with a quad-tree
 
-<img src="" height="250" width="250">
+<img src="https://user-images.githubusercontent.com/113480613/235872531-41840ce1-caa1-4648-8610-4c1ea1d60ce3.PNG" height="450" width="650">
 
 ## Assignment 3 March 23, 2023
 ### Goals and Scoring
